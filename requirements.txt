@@ -1,7 +1,3 @@
 fastapi
 uvicorn
-google-generative-ai
-numpy
-pandas
-matplotlib
-xgboost
+
