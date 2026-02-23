@@ -11,3 +11,4 @@ google-generativeai
 xgboost
 jinja2
 python-multipart
+scikit-learn
