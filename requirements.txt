@@ -1,0 +1,6 @@
+Fastapi
+google-generative-ai
+numpy
+pandas
+matplotlib
+xgboost
