@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> Chat</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: url("/static/bg2.gif") no-repeat center center fixed;
+  background-size: cover;
+  background-position: center;
+}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0);
+  z-index: 0;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #2a2a2a;
+  position: relative;
+  z-index: 1;
+}
+header h1 { margin: 0; font-size: 1.5rem; }
+header a {
+  color: #00bfff; text-decoration: none;
+  font-size: 1rem;
+  background: #1e1e1e;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+header a:hover { background: #292929; }
+
+.chat-container { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; position: relative; z-index: 1; }
+.message { max-width: 70%; margin-bottom: 12px; padding: 12px 15px; border-radius: 12px; line-height: 1.4; word-wrap: break-word; }
+.user { background-color: #1e88e5; align-self: flex-end; border-bottom-right-radius: 0; }
+.bot { background-color: #1e1e1e; align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid #2a2a2a; }
+
+form { display: flex; border-top: 1px solid #2a2a2a; padding: 10px; background-color: #1a1a1a; position: relative; z-index: 1; }
+input[type="text"] { flex: 1; padding: 12px; border-radius: 8px; border: none; outline: none; font-size: 1rem; background-color: #2a2a2a; color: #fff; }
+button { margin-left: 10px; padding: 12px 20px; background-color: #00bfff; border: none; border-radius: 8px; color: #fff; font-size: 1rem; cursor: pointer; transition: background 0.3s; }
+button:hover { background-color: #0099cc; }
+
+.loader { display: inline-block; width: 20px; height: 20px; border: 3px solid #00bfff; border-radius: 50%; border-top: 3px solid transparent; animation: spin 1s linear infinite; margin-left: 10px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💬ChatBot</h1>
+  <a href="/">⬅ Back</a>
+</header>
+
+<div class="chat-container" id="chat-container">
+  <!-- Important Note -->
+  <div class="message bot" style="background-color:#ffcc00; color:#000;">
+    ⚠️ Tip: <strong>use relevant keywords for web search and image fetching. Inappropriate image requests will throw server errors</strong>
+  </div>
+
+  <div class="message bot">👋 Hello! I’m your AI assistant. How can I help you today?</div>
+</div>
+
+<form id="chat-form">
+  <input type="text" id="prompt" placeholder="Type your message..." required>
+  <button type="submit">Send</button>
+</form>
+
+<script>
+const form = document.getElementById("chat-form");
+const input = document.getElementById("prompt");
+const container = document.getElementById("chat-container");
+
+// ⭐ session memory
+let session_id = null;
+
+function addMessage(text, className) {
+  const msg = document.createElement("div");
+  msg.className = "message " + className;
+  msg.innerHTML = text;   // allow images / markdown / html
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const userText = input.value.trim();
+  if (!userText) return;
+
+  addMessage(userText, "user");
+  input.value = "";
+
+  const loader = document.createElement("div");
+  loader.className = "message bot";
+  loader.innerHTML = '<div class="loader"></div>';
+  container.appendChild(loader);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    // ⭐ form data instead of urlencoded
+   const params = new URLSearchParams();
+params.append("prompt", userText);
+
+if (session_id) {
+  params.append("session_id", session_id);
+}
+
+const res = await fetch("/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  body: params
+});
+
+    const data = await res.json();
+
+    // ⭐ store session id for next message
+    if (data.session_id) {
+      session_id = data.session_id;
+    }
+
+    loader.innerHTML = data.reply || "⚠️ Error: " + data.error;
+
+  } catch (err) {
+    loader.innerHTML = "⚠️ Failed to reach server";
+  }
+
+  container.scrollTop = container.scrollHeight;
+});
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    form.dispatchEvent(new Event("submit"));
+  }
+});
+</script>
+
+
+</body>
+</html>
+
+

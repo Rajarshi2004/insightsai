@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Tool</title>
+<style>
+/* Video Background */
+#bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+
+
+
+/* Floating content */
+header, .selection, .about, .connect {
+    position: relative;
+    z-index: 1;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 50px 20px 20px 20px;
+}
+header h1 {
+    margin: 0;
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 1px;
+
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.6),
+        0 6px 12px rgba(0, 0, 0, 0.5),
+        0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+
+
+header p {
+    color: #cccccc;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+/* Selection Tabs */
+.selection {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 50px 20px;
+    flex-wrap: wrap;
+}
+.tab {
+    display: block;
+    background: rgba(30,30,30,0.85);
+    padding: 40px 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 300px;
+    text-decoration: none;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+/* Primary ML Tab Highlight */
+.tab.primary {
+    transform: scale(1.08);
+    border: 2px solid #00bfff;
+    box-shadow: 0 0 25px #00bfff88, 0 0 60px #00bfff33;
+    background: rgba(0, 123, 255, 0.18);
+}
+
+.tab.primary h2 {
+    color: #ffffff;
+}
+
+.tab.primary .icon {
+    text-shadow: 0 0 15px #00bfff, 0 0 30px #00bfff;
+}
+
+/* Badge */
+.badge {
+    margin-top: 15px;
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    background: #00bfff;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Secondary Chat Tab Muted */
+.tab.secondary {
+    opacity: 0.75;
+    filter: grayscale(30%);
+}
+
+.tab.secondary:hover {
+    opacity: 0.9;
+    transform: translateY(-5px);
+}
+
+.tab:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+    background: rgba(40,40,40,0.95);
+}
+.tab .icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 8px #00bfff, 0 0 15px #00bfff33;
+}
+.tab h2 {
+    margin: 10px 0;
+    font-size: 1.6rem;
+    color: #00bfff;
+}
+.tab p {
+    font-size: 0.95rem;
+    color: #cccccc;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* About Me */
+.about {
+    background-color: rgba(30,30,30,0.85);
+    padding: 40px 20px;
+    margin: 50px auto;
+    width: 80%;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+.about h2 {
+    color: #00bfff;
+    margin-bottom: 15px;
+}
+.about p {
+    color: #cccccc;
+    line-height: 1.6;
+}
+
+/* Connect Section */
+.connect {
+    text-align: center;
+    margin: 50px 0;
+}
+.connect h2 {
+    color: #00bfff;
+    margin-bottom: 15px;
+}
+.connect a {
+    display: inline-block;
+    margin: 10px 15px;
+    text-decoration: none;
+    color: #00bfff;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+.connect a:hover {
+    color: #ffffff;
+}
+</style>
+</head>
+<body>
+
+<!-- VIDEO BACKGROUND -->
+<video autoplay muted loop playsinline preload="auto" id="bg-video">
+    <source src="/static/bgmain.mp4" type="video/mp4">
+</video>
+
+
+<div class="overlay"></div>
+
+<header>
+    <h1>🌐InsightsAI</h1>
+    <p>Select a model below to get started with AI-powered analysis and conversation.</p>
+</header>
+
+<div class="selection">
+
+    <a href="/chat" class="tab secondary">
+      <div class="icon">💬</div>
+      <h2>Chatbot</h2>
+      <p>
+        Provides market information and insights, recent news, and explanations that include image fetching and web search.
+      </p>
+    </a>
+
+    <a href="/ml" class="tab primary">
+      <div class="icon">📊</div>
+      <h2>AI Stock Forecasting System</h2>
+      <p>
+        Machine learning–based stock forecasting using XGBoost, technical
+        indicators, trend detection, and confidence analysis with
+        visual prediction graphs.
+      </p>
+      <div class="badge">Main Feature</div>
+    </a>
+
+</div>
+
+<div class="about">
+    <h2>About Me</h2>
+    <p>Hello! I’m Rajarshi Paul, a B.Tech student in Computer Science & Engineering. I’m passionate about AI, ML, web development, and building interactive tools to solve real-world problems. This project showcases a combination of AI chat and predictive analytics tools.</p>
+</div>
+
+<div class="connect">
+    <h2>Connect with Me</h2>
+    <a href="mailto:rajarshipaul20@gmail.com">📧 Email</a>
+    <a href="https://www.linkedin.com/in/rajarshi-paul-a0710628b/" target="_blank">🔗 LinkedIn</a>
+    <a href="https://github.com/Rajarshi2004" target="_blank">💻 GitHub</a>
+</div>
+
+</body>
+
+</html>
+

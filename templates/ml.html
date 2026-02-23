@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Forecast</title>
+
+<!-- Plotly -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+/* ================= GLOBAL ================= */
+body {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('/static/bg6.gif') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+}
+
+/* ================= LAYOUT ================= */
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 30px;
+    flex-wrap: wrap;
+}
+
+/* ================= PANELS ================= */
+.panel,
+.info-panel {
+    background: rgba(0,0,0,0.75);
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 300px;
+    min-width: 280px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.graph-panel {
+    flex: 1;
+    max-width: 850px;
+    min-width: 400px;
+    text-align: center;
+}
+
+/* ================= FORM ================= */
+label {
+    display: block;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+/* ================= BUTTON ================= */
+button {
+    --orange1:#ff8a00;
+    --orange2:#ff5e00;
+    --blueText:#072a6b;
+
+    position:relative;
+    overflow:hidden;
+    border:none;
+    border-radius:12px;
+    padding:14px 26px;
+    margin-top:15px;
+    cursor:pointer;
+
+    color:var(--blueText);
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+
+    background: linear-gradient(135deg, var(--orange1), var(--orange2));
+    box-shadow:
+        0 12px 26px rgba(255,140,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.35);
+
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.08);
+}
+
+button:active {
+    transform: translateY(1px) scale(.98);
+}
+
+button::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35), transparent 70%);
+    transform: translateX(-120%);
+    transition: transform .6s ease;
+}
+
+button:hover::after {
+    transform: translateX(120%);
+}
+
+/* ================= BADGES ================= */
+.badge {
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.bullish { background-color: #28a745; }
+.bearish { background-color: #dc3545; }
+.sideways { background-color: #ffc107; }
+
+/* ================= OUTPUT ================= */
+.output-box {
+    background: rgba(255,255,255,0.06);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    line-height: 1.6;
+    text-align: left;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .graph-panel {
+        min-width: 100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="panel">
+        <h2>Stock Forecast Tool</h2>
+
+        <label>Stock Symbol</label>
+        <input type="text" id="stock" placeholder="E.g. AAPL">
+
+        <label>Forecast Horizon (1-90 Days)</label>
+        <input type="number" id="days" value="7" min="1" max="90">
+
+        <button onclick="runForecast()">Run Forecast</button>
+        <button onclick="goBack()">Back</button>
+
+        <p style="margin-top:20px; font-size:13px; opacity:0.7;">
+            Predictions are based on historical data only. Sudden macro events 
+            may not be reflected in the forecast.
+        </p>
+    </div>
+
+    <!-- CENTER GRAPH -->
+    <div class="graph-panel">
+        <div id="graph-container">
+            <p style="opacity:0.6;">Forecast graph will appear here after analysis.</p>
+        </div>
+
+        <div id="result" class="output-box"></div>
+    </div>
+
+    <!-- RIGHT INFO PANEL -->
+    <div class="info-panel">
+        <h3>How to Use</h3>
+        <ul>
+            <li>Enter stock symbol.</li>
+            <li>Select forecast horizon.</li>
+            <li>Click Run Forecast.</li>
+            <li>Review trend and confidence.</li>
+        </ul>
+
+        <h3>Important</h3>
+        <ul>
+            <li>Forecasts are probabilistic.</li>
+            <li>Short-term volatility may vary.</li>
+            <li>Always consider external factors.</li>
+        </ul>
+    </div>
+
+</div>
+
+<script>
+function goBack() {
+    window.history.back();
+}
+
+async function runForecast() {
+    const stock = document.getElementById("stock").value.trim();
+    const horizon = parseInt(document.getElementById("days").value);
+    const resultBox = document.getElementById("result");
+    const graphContainer = document.getElementById("graph-container");
+
+    if (!stock) {
+        alert("Please enter a stock symbol.");
+        return;
+    }
+
+    resultBox.innerHTML = "";
+    graphContainer.innerHTML = "<p>Running analysis...</p>";
+
+    try {
+        const response = await fetch("/ml/forecast", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ stock, horizon })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || "Forecast failed");
+        }
+
+        const data = await response.json();
+
+        // Create chart container
+        graphContainer.innerHTML = '<div id="chart" style="height:600px;"></div>';
+
+        const historical = {
+            x: data.historical_dates,
+            y: data.historical_prices,
+            type: "scatter",
+            mode: "lines",
+            name: "Historical"
+        };
+
+        const forecast = {
+            x: data.forecast_dates,
+            y: data.forecast_mean,
+            type: "scatter",
+            mode: "lines",
+            name: "Forecast",
+            line: { dash: "dash" }
+        };
+
+        const lower = {
+            x: data.forecast_dates,
+            y: data.lower_ci,
+            type: "scatter",
+            mode: "lines",
+            line: { width: 0 },
+            showlegend: false
+        };
+
+        const upper = {
+            x: data.forecast_dates,
+            y: data.upper_ci,
+            type: "scatter",
+            mode: "lines",
+            fill: "tonexty",
+            line: { width: 0 },
+            name: "Confidence Interval"
+        };
+
+        Plotly.newPlot("chart",
+            [historical, forecast, lower, upper],
+            {
+                template: "plotly_dark",
+                hovermode: "x unified",
+                margin: { t: 40 }
+            }
+        );
+
+        const buy = data.last_close;
+        const sell = data.forecast_mean.slice(-1)[0];
+        const cons = data.lower_ci.slice(-1)[0];
+        const trend = data.trend;
+        const conf = data.confidence;
+
+        let expected = (((sell - buy) / buy) * 100).toFixed(2);
+        let badgeClass = trend === "Bullish" ? "bullish"
+                       : trend === "Bearish" ? "bearish"
+                       : "sideways";
+
+        resultBox.innerHTML = `
+            <h3>${data.stock} Forecast Below :</h3>
+            <span class="badge ${badgeClass}">${trend}</span>
+            <p><b>Last Close:</b> ₹${buy}</p>
+            <p><b>Target Price:</b> ₹${sell}</p>
+            <p><b>Conservative Price:</b> ₹${cons}</p>
+            <p><b>Expected Change:</b> ${expected}%</p>
+            <p><b>Model Confidence:</b> ${conf}</p>
+        `;
+
+    } catch (err) {
+        graphContainer.innerHTML = "";
+        resultBox.innerHTML = `<p style="color:red;"><b>Error:</b> ${err.message}</p>`;
+    }
+}
+</script>
+
+</body>
+</html>
