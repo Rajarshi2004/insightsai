@@ -130,7 +130,11 @@ def forecast_stock(data: dict):
         if df.empty:
             raise HTTPException(status_code=400, detail="Invalid stock symbol")
 
-        
+        # ===== FIX: HANDLE MULTIINDEX FROM YFINANCE =====
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+
+        # ===== FEATURE ENGINEERING =====
         df["Return"] = df["Close"].pct_change()
         df["MA10"] = df["Close"].rolling(10).mean()
         df["MA20"] = df["Close"].rolling(20).mean()
@@ -192,26 +196,26 @@ def forecast_stock(data: dict):
         trend = "Bullish" if future_prices[-1] > last_price else "Bearish"
         confidence = "High" if std < 0.02 else "Moderate"
 
-        # ===== RETURN CLEAN JSON =====
-        close_series = df["Close"].astype(float).squeeze()
+        close_series = df["Close"].astype(float)
 
         return {
-        "stock": stock,
-        "last_close": float(last_price),
+            "stock": stock,
+            "last_close": float(last_price),
 
-        "historical_dates": close_series.index[-120:].strftime("%Y-%m-%d").tolist(),
-        "historical_prices": close_series.iloc[-120:].tolist(),
+            "historical_dates": close_series.index[-120:].strftime("%Y-%m-%d").tolist(),
+            "historical_prices": close_series.iloc[-120:].tolist(),
 
-        "forecast_dates": future_dates.strftime("%Y-%m-%d").tolist(),
-        "forecast_mean": mean_series.astype(float).tolist(),
-        "lower_ci": lower_series.astype(float).tolist(),
-        "upper_ci": upper_series.astype(float).tolist(),
+            "forecast_dates": future_dates.strftime("%Y-%m-%d").tolist(),
+            "forecast_mean": mean_series.astype(float).tolist(),
+            "lower_ci": lower_series.astype(float).tolist(),
+            "upper_ci": upper_series.astype(float).tolist(),
 
-        "trend": trend,
-        "confidence": confidence
+            "trend": trend,
+            "confidence": confidence
         }
+
     except Exception as e:
-            return JSONResponse(
-                status_code=500,
-               content={"detail": str(e)}
-            )     
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(e)}
+        )
